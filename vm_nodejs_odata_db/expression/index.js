@@ -10,6 +10,10 @@ module.exports = {
 
 	field: function(field, source_alias){
 		return new ExpressionField(field, source_alias);
+	},
+	
+	param: function(name, value) {
+		return new ExpressionParam(name, value);
 	}
 };
 
@@ -58,3 +62,8 @@ function ExpressionField(field) {
 	this.field = field;
 }
 util.inherits(ExpressionField, Expression);
+
+function ExpressionParam(name, value) {
+	this.name = name;
+	this.value = value;
+}

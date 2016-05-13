@@ -4,15 +4,15 @@ module.exports = {
   expression2sql: ExpressionToSql 
 };
 
-function ExpressionToSql(expression, options) {
+function ExpressionToSql(context, expression) {
   if(expression.constructor.name == 'ExpressionSelect') {
-    return 'SELECT ' + ColumnsToSql(expression.columns) + ' FROM ' + SourceToSql(expression.source);
+    return 'SELECT ' + ColumnsToSql(context, expression.columns) + ' FROM ' + SourceToSql(context, expression.source);
   }
   
   throw 'Invalid expression type';
 }
 
-function ColumnsToSql(columns) {
+function ColumnsToSql(context, columns) {
   if(columns.constructor.name == 'String') {
     return columns;
   }
@@ -24,9 +24,9 @@ function ColumnsToSql(columns) {
   throw 'Invalid columns type';
 }
 
-function SourceToSql(source) {
+function SourceToSql(context, source) {
   if(source.constructor.name == 'ExpressionWhere') {
-    return SourceToSql(source.source) + ' WHERE ' + WhereToSql(source.filter);
+    return SourceToSql(context, source.source) + ' WHERE ' + WhereToSql(context, source.filter);
   }
   
   if(source.constructor.name == 'ExpressionFrom') {
@@ -36,20 +36,24 @@ function SourceToSql(source) {
   throw 'Invalid expression type';  
 }
 
-function WhereToSql(expression) {
+function WhereToSql(context, expression) {
   if(expression.constructor.name == 'BinaryExpression') {
     switch(expression.operation){
       case 'eq':
-        return FilterExpressionToSql(expression.left) + '=' +  FilterExpressionToSql(expression.right);  
+        return FilterExpressionToSql(context, expression.left) + '=' +  FilterExpressionToSql(context, expression.right);  
     }
   }
   
   throw 'Invalid expression';  
 }
 
-function FilterExpressionToSql(expression) {
+function FilterExpressionToSql(context, expression) {
   if(expression.constructor.name == 'ExpressionField') {
     return expression.field;
+  }
+  
+  if(expression.constructor.name == 'ExpressionParam') {
+    return context.builder.add_param(context, expression.name, expression.value); 
   }
     
   throw 'Invalid expression';  

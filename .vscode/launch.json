@@ -2,13 +2,34 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Запустить",
+            "name": "Run",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/vm_nodejs_odata_db/test/test_expression2sql.js",
+            //"program": "${workspaceRoot}/vm_nodejs_odata_db/test/test_database_model.js",
+            //"program": "${workspaceRoot}/vm_nodejs_odata_db/test/test_expression2sql.js",
+            "program": "${workspaceRoot}/vm_nodejs_odata_db/node_modules/mocha/bin/mocha",
             "stopOnEntry": false,
-            "args": [],
-            "cwd": "${workspaceRoot}",
+            "args": [ "--debug-brk", "${workspaceRoot}/vm_nodejs_odata_db/test/test_database_model.js" ],
+            "cwd": "${workspaceRoot}/vm_nodejs_odata_db",
+            "preLaunchTask": null,
+            "runtimeExecutable": null,
+            "runtimeArgs": [
+                "--nolazy"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "externalConsole": false,
+            "sourceMaps": false,
+            "outDir": null
+        },
+        {
+            "name": "Run tests",
+            "type": "node",
+            "program": "${workspaceRoot}/vm_nodejs_odata_db/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "args": [ ],
+            "cwd": "${workspaceRoot}/vm_nodejs_odata_db",
             "preLaunchTask": null,
             "runtimeExecutable": null,
             "runtimeArgs": [
