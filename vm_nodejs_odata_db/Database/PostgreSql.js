@@ -19,7 +19,6 @@ PostgreSqlProvider.prototype.recreate_database = function (done_callback) {
     client.connect(function (err, client, done) {
         if(err) {
             debug('error fetching client from pool ' + err);
-            done(err);
             throw 'error fetching client from pool ' + err;
         }
         
@@ -62,10 +61,27 @@ PostgreSqlProvider.prototype.recreate_database = function (done_callback) {
 };
 
 PostgreSqlProvider.prototype.connect = function (connect_callback) {
-    pg.connect(this.connection_string, function (err, client, done) { 
-    //var client = new pg.Client(this.connection_string);
-    //client.connect(function (err, client, result, done) {
-        connect_callback(err, new PostgreSqlClient(client), done);
+    pg.connect(this.connection_string, function (err, client, done) {
+        if(err) {
+            return connect_callback(err, undefined, done);
+        }
+        
+        client.query('BEGIN', new function (err) {
+           if(err) return connect_callback(err, undefined, done);
+           
+            var proxy = new PostgreSqlClient(client);
+            connect_callback(err, proxy, function(err){
+                if(err) {
+                    client.query('ROLLBACK', new function () {
+                        return done(err);
+                    });
+                }
+                
+                client.query('COMMIT', new function (err) {
+                    return done(err);
+                });
+            });
+        });
     });
 };
 
@@ -109,6 +125,16 @@ PostgreSqlClient.prototype.insert = function (schema, table, rows, callback) {
     debug('query: ' + sql);
     
     this.real_client.query(sql, params, callback);
+}
+
+PostgreSqlClient.prototype.get_identity = function (callback) {
+    this.real_client.query('SELECT LASTVAL()', function(err, result) {
+        if(err){
+            callback(err);
+        } else {
+            callback(err, result.rows);
+        }
+    });
 }
 
 

@@ -9,8 +9,10 @@
   "author": "Vadim Malyshev (vadim@iv-soft.ru)",
   "license": "ISC",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^2.4.5",
-    "vows": "^0.8.1"
+    "mocha": "^2.4.5"
+  },
+  "dependencies": {
+    "async": "^2.0.0-rc.4",
+    "debug": "^2.2.0"
   }
 }
