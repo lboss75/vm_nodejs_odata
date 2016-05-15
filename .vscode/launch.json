@@ -5,12 +5,10 @@
             "name": "Run",
             "type": "node",
             "request": "launch",
-            //"program": "${workspaceRoot}/vm_nodejs_odata_db/test/test_database_model.js",
-            //"program": "${workspaceRoot}/vm_nodejs_odata_db/test/test_expression2sql.js",
-            "program": "${workspaceRoot}/vm_nodejs_odata_db/node_modules/mocha/bin/mocha",
+            "program": "${workspaceRoot}/DemoApp/app.js",
             "stopOnEntry": false,
-            "args": [ "--debug-brk", "${workspaceRoot}/vm_nodejs_odata_db/test/test_database_model.js" ],
-            "cwd": "${workspaceRoot}/vm_nodejs_odata_db",
+            "args": [  ],
+            "cwd": "${workspaceRoot}/DemoApp",
             "preLaunchTask": null,
             "runtimeExecutable": null,
             "runtimeArgs": [
@@ -36,7 +34,8 @@
                 "--nolazy"
             ],
             "env": {
-                "NODE_ENV": "development"
+                "NODE_ENV": "development",
+                "DEBUG":"vm_nodejs_odata"
             },
             "externalConsole": false,
             "sourceMaps": false,

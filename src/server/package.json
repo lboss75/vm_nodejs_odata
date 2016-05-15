@@ -1,0 +1,25 @@
+{
+  "name": "vm_nodejs_odata_server",
+  "version": "0.0.1",
+  "description": "OData server with dynamic model",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lboss75/vm_nodejs_odata.git"
+  },
+  "keywords": [
+    "OData",
+    "Web",
+    "Dynamic",
+    "PosgreSql"
+  ],
+  "author": "Vadim Malyshev (lboss75@gmail.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lboss75/vm_nodejs_odata/issues"
+  },
+  "homepage": "https://github.com/lboss75/vm_nodejs_odata#readme"
+}

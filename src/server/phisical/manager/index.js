@@ -1,11 +1,15 @@
 module.exports = {
-    manager: new ODataManager(process.env.ODATA_DATABASE_PROVIDER, process.env.ODATA_DATABASE_URL) 
+    create_manager: function () {
+        return new ODataManager(process.env.ODATA_DATABASE_PROVIDER, process.env.ODATA_DATABASE_URL);
+    } 
 };
 
-var exp = require('../expression');
 var debug = require('debug')('odata_maanger');
 var async = require('async');
+var exp = require('../expression');
+var odata_migrator = require('./migrator');
 
+const ODATA_MODULE_NAME = 'vm_odata';
 function ODataManager(providerName, connectionString) {
     this.modules2migrate = [];
     switch(providerName){
@@ -70,34 +74,55 @@ ODataManager.prototype.migrate = function (done_callback) {
     
     function insertModule(module2migrate, done, client) {
         client.insert(
-            'vm_odata', 'module',
+            ODATA_MODULE_NAME, 'module',
             [{
                 'name': module2migrate.name,
                 'namespace': module2migrate.namespace
             }],
             function (err, result) {
                 if(err){
-                    debug('Unable to inser module ' + module2migrate.name + ' ' + err);
-                    done(err);
-                } else {
-                    client.get_identity(function (err, moduleIds) {
-                        migrateModuleCommands(moduleIds[0], module2migrate, done);
-                    });
+                    debug('Unable to insert module ' + module2migrate.name + ' ' + err);
+                    return done(err);
                 }
+                
+                client.get_identity(function (err, moduleIds) {
+                    client.create_schema(
+                        module2migrate.name,
+                        function (err) {
+                            if(err) return done(err);
+                            
+                            migrateModuleCommands(moduleIds[0], module2migrate, 0, client, done);
+                        });
+                });
             });
     }
     
-    function migrateModuleCommands(moduleId, module2migrate, done){
+    function migrateModuleCommands(moduleId, module2migrate, last_migration, client, done){
         async.forEach(module2migrate.migrations, function(migration, callback){
-            doModuleMigration(moduleId, module2migrate, migration, callback);
-        }, done);
+            if(last_migration < migration.id){
+                last_migration = migration.id;
+                doModuleMigration(moduleId, module2migrate, migration, client, callback);
+            }
+        }, function(err){
+            if(err) return done(err);
+            
+            client.update(
+                ODATA_MODULE_NAME, 'module', 'm',
+                {
+                    'last_migration': last_migration
+                },
+                exp.field('m.id').eq(exp.param('moduleId', moduleId)),
+                done
+            );
+        });
     }
     
-    function doModuleMigration(moduleId, module2migrate, migration, done){
-        done();
+    function doModuleMigration(moduleId, module2migrate, migration, client, done){
+        var migrator = odata_migrator.create_migrator(pThis, moduleId, client);
+        migration.command(migrator);
+        migrator.migrate(done);
     }
 };
-
 
 ODataManager.prototype.modules = function (callback) {
     this.provider.connect(function (err, client, done) {
@@ -105,9 +130,13 @@ ODataManager.prototype.modules = function (callback) {
             throw 'Unable to database connect ' + err;
         }
         client.query(
-            exp.from('vm_odata', 'module', 'm').select(['m.name', 'm.namespace']),
+            exp.from(ODATA_MODULE_NAME, 'module', 'm').select(['m.name', 'm.namespace','m.last_migration']),
             function (err, result) {
-                callback(err, result.rows, done, client);
+                callback(err, result, done, client);
             });            
     });
+};
+
+ODataManager.prototype.get_entity_set = function (client, entitySetId, callback) {
+    require('../types/entity_set.js').load_entity_set(client, entitySetId, callback);
 };

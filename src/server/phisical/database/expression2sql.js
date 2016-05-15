@@ -1,7 +1,8 @@
 var exp = require('../expression');
 
 module.exports = {
-  expression2sql: ExpressionToSql 
+  expression2sql: ExpressionToSql,
+  where2sql: WhereToSql
 };
 
 function ExpressionToSql(context, expression) {
