@@ -1,0 +1,20 @@
+{
+  "name": "demoapp",
+  "description": "Odata dynamic database demo",
+  "main": "app.js",
+  "authors": [
+    "Vadim Malyshev (lboss75@gmail.com)"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/lboss75/vm_nodejs_odata",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "^3.3.6"
+  }
+}

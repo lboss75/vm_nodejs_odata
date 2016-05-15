@@ -5,10 +5,10 @@
             "name": "Run",
             "type": "node",
             "request": "launch",
-            "program": "${workspaceRoot}/DemoApp/app.js",
+            "program": "${workspaceRoot}/demo/demoapp/app.js",
             "stopOnEntry": false,
             "args": [  ],
-            "cwd": "${workspaceRoot}/DemoApp",
+            "cwd": "${workspaceRoot}/demo/demoapp",
             "preLaunchTask": null,
             "runtimeExecutable": null,
             "runtimeArgs": [
