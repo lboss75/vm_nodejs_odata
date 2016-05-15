@@ -1,7 +1,7 @@
 var assert = require('assert');
 
-var exp = require('../expression');
-var postgresql = require('../database/postgresql.js');
+var exp = require('../phisical/expression');
+var postgresql = require('../phisical/database/postgresql.js');
 
 describe('SQL builder tests', function () {
     var expression_builder = postgresql.expression_builder();

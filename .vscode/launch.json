@@ -24,10 +24,10 @@
         {
             "name": "Run tests",
             "type": "node",
-            "program": "${workspaceRoot}/vm_nodejs_odata_db/node_modules/mocha/bin/_mocha",
+            "program": "${workspaceRoot}/src/server/node_modules/mocha/bin/_mocha",
             "stopOnEntry": false,
             "args": [ ],
-            "cwd": "${workspaceRoot}/vm_nodejs_odata_db",
+            "cwd": "${workspaceRoot}/src/server",
             "preLaunchTask": null,
             "runtimeExecutable": null,
             "runtimeArgs": [

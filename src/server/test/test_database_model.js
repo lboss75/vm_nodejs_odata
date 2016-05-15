@@ -1,7 +1,7 @@
 var assert = require('assert'),
-	postgresql = require('../database/postgresql.js');
+	postgresql = require('../phisical/database/postgresql.js');
 
-var odata = require('../manager');
+var odata = require('../phisical/manager');
 describe('Entity tests', function () {
 	this.timeout(15000);
 	
