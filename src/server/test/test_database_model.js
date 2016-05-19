@@ -10,7 +10,7 @@ describe('Entity tests', function () {
 		odata_manager.provider.recreate_database(function () {
 			odata_manager.module({
 					name: 'testmodule',
-					namespace: 'http://test.org/testmodule',
+					namespace: 'testnamespace',
 					migrations: [{
 						id: 1,
 						command: function(migrator) {
@@ -44,7 +44,7 @@ describe('Entity tests', function () {
 					odata_manager.modules(function (err, modules, done) {
 						assert.equal (modules.length, 1);
 						assert.equal (modules[0].name, 'testmodule');
-						assert.equal (modules[0].namespace, 'http://test.org/testmodule');
+						assert.equal (modules[0].namespace, 'testnamespace');
 						done();
 						done_test();
 					});

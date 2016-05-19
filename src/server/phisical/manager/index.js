@@ -32,7 +32,6 @@ ODataManager.prototype.migrate = function (done_callback) {
     this.modules(function (err, modules, done, client) {
         if(err){
             debug('Unable to read modules ' + err);
-            done(err);
             return done_callback(err);
         }
         
@@ -124,11 +123,29 @@ ODataManager.prototype.migrate = function (done_callback) {
     }
 };
 
+ODataManager.prototype.MODULE = {
+	SCHEMA: 'vm_odata',
+	TABLE: 'module',
+	ALIAS: 'm',
+	ID: 'id',
+	NAME: 'name',
+	NAMESPACE: 'namespace'
+};
+
+ODataManager.prototype.ENTITY_TYPE = {
+	SCHEMA: 'vm_odata',
+	TABLE: 'entity_type',
+	ALIAS: 't',
+	ID: 'id',
+	MODULE_ID: 'module_id',
+	NAME: 'name',
+	BASE_TYPE: 'base_type'
+};
+
 ODataManager.prototype.modules = function (callback) {
     this.provider.connect(function (err, client, done) {
-        if(err){
-            throw 'Unable to database connect ' + err;
-        }
+        if(err) return callback(err);
+        
         client.query(
             exp.from(ODATA_MODULE_NAME, 'module', 'm').select(['m.name', 'm.namespace','m.last_migration']),
             function (err, result) {
@@ -139,4 +156,29 @@ ODataManager.prototype.modules = function (callback) {
 
 ODataManager.prototype.get_entity_set = function (client, entitySetId, callback) {
     require('../types/entity_set.js').load_entity_set(client, entitySetId, callback);
+};
+
+ODataManager.prototype.get_modules = function (client, fields, callback) {
+    client.query(
+        exp
+            .from(this.MODULE.SCHEMA, this.MODULE.TABLE, this.MODULE.ALIAS)
+            .select(fields),
+        function (err, result) {
+            if(err) return callback(err);
+            
+            callback(err, result);
+        });
+};
+
+ODataManager.prototype.get_module_entity_types = function (client, moduleId, fields, callback) {
+    client.query(
+        exp
+            .from(this.ENTITY_TYPE.SCHEMA, this.ENTITY_TYPE.TABLE, this.ENTITY_TYPE.ALIAS)
+            .where(exp.field(this.ENTITY_TYPE.ALIAS + '.' + this.ENTITY_TYPE.MODULE_ID).eq(exp.param('module_id', moduleId)))
+            .select(fields),
+        function (err, result) {
+            if(err) return callback(err);
+            
+            callback(err, result);
+        });
 };

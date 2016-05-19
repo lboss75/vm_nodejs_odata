@@ -20,7 +20,7 @@ PostgreSqlProvider.prototype.recreate_database = function (done_callback) {
     client.connect(function (err, client, done) {
         if(err) {
             debug('error fetching client from pool ' + err);
-            throw 'error fetching client from pool ' + err;
+            return done_callback(err);
         }
         
         client.query('SELECT nspname FROM pg_catalog.pg_namespace WHERE nspname !~ \'^pg_\' AND nspname <> \'information_schema\'', function(err, result) {
