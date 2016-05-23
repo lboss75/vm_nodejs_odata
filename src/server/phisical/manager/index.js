@@ -11,7 +11,41 @@ var odata_migrator = require('./migrator');
 
 const ODATA_MODULE_NAME = 'vm_odata';
 function ODataManager(providerName, connectionString) {
-    this.modules2migrate = [];
+    this.modules2migrate = [{
+        name: ODATA_MODULE_NAME,
+        namespace: ODATA_MODULE_NAME,
+        _skip_create: true,
+        migrations: [{
+            id: 1,
+            command: function(migrator) {
+                var moduleType = migrator.create_entity_type({ name: 'module_type'});
+                moduleType.add_property({
+                    name: 'id',
+                    type: 'Edm.Int32'
+                });
+                moduleType.add_property({
+                    name: 'name',
+                    type: 'Edm.String',
+                    length: 100
+                });
+                moduleType.add_property({
+                    name: 'namespace',
+                    type: 'Edm.String',
+                    length: 100
+                });
+                
+                var container1 = migrator.create_entity_container({
+                    name: 'Default',
+                    _skip_create: true
+                });
+                
+                var entitySet1 = container1.create_entity_set({
+                    name: 'module',
+                    type: moduleType
+                });
+            }
+        }]
+    }];
     switch(providerName){
         case 'postgresql':
             var postgresql = require('../database/postgresql.js');
@@ -90,13 +124,17 @@ ODataManager.prototype.migrate = function (done_callback) {
                 }
                 
                 client.get_identity(function (err, moduleIds) {
-                    client.create_schema(
-                        module2migrate.name,
-                        function (err) {
-                            if(err) return done(err);
-                            
-                            migrateModuleCommands(moduleIds[0], module2migrate, 0, client, done);
-                        });
+                    if(module2migrate._skip_create){
+                        migrateModuleCommands(moduleIds[0], module2migrate, 0, client, done);
+                    } else {
+                        client.create_schema(
+                            module2migrate.name,
+                            function (err) {
+                                if(err) return done(err);
+                                
+                                migrateModuleCommands(moduleIds[0], module2migrate, 0, client, done);
+                            });
+                    }
                 });
             });
     }

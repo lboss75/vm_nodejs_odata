@@ -67,6 +67,7 @@ ODataMigrator.prototype.create_entity_container = function (containerInfo){
 };
 
 function CreateEntityContainerCommand(containerInfo) {
+    this._skip_create = containerInfo._skip_create;
     this.container = containerInfo;
     this.entity_sets = [];
 }
@@ -107,7 +108,11 @@ CreateEntityContainerCommand.prototype.execute = function (migrate_context, done
                         migrate_context.client.get_identity(function (err, result) {
                             if(err) return callback(err);
                             
-                            migrate_context.client.create_entity_set(migrate_context.odata_manager, result[0], callback);
+                            if(pThis._skip_create){
+                                callback();
+                            } else {
+                                migrate_context.client.create_entity_set(migrate_context.odata_manager, result[0], callback);
+                            }
                         });
                     });
                 }, done);

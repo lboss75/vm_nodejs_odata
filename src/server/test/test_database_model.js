@@ -7,7 +7,9 @@ describe('Entity tests', function () {
 	
 	it('when create simple entity model', function (done_test) {
 		var odata_manager = odata.create_manager(); 
-		odata_manager.provider.recreate_database(function () {
+		odata_manager.provider.recreate_database(function (err) {
+			if(err) return done_test(err);
+			
 			odata_manager.module({
 					name: 'testmodule',
 					namespace: 'testnamespace',
@@ -45,9 +47,9 @@ describe('Entity tests', function () {
 						odata_manager.MODULE.NAME,
 						odata_manager.MODULE.NAMESPACE						
 					], function (err, modules) {
-						assert.equal (modules.length, 1);
-						assert.equal (modules[0].name, 'testmodule');
-						assert.equal (modules[0].namespace, 'testnamespace');
+						assert.equal (modules.length, 2);
+						assert.equal (modules[1].name, 'testmodule');
+						assert.equal (modules[1].namespace, 'testnamespace');
 						done_test();
 					});
 				}

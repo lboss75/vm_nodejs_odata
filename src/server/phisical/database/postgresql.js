@@ -17,7 +17,7 @@ function PostgreSqlProvider(connnectionString) {
 
 PostgreSqlProvider.prototype.recreate_database = function (done_callback) {
     var client = new pg.Client(this.connection_string);
-    client.connect(function (err, client, done) {
+    client.connect(function (err, client) {
         if(err) {
             debug('error fetching client from pool ' + err);
             return done_callback(err);
@@ -111,9 +111,11 @@ CREATE INDEX fki_entity_set_entity_type ON vm_odata.entity_set USING btree (enti
                 ', function (err, result) {
                     if(err) {
                         console.error('error at create odata tables', err);
-                        throw 'error at create module table ' + err;
+                        client.end();
+                        return done_callback(err);
                     }
                     
+                    client.end();
                     done_callback();
                 }
             );

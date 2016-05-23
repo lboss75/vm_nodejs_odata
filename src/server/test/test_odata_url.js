@@ -51,11 +51,16 @@ describe('OData tests', function () {
 '<?xml version="1.0"?>\n\
 <edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">\
 <edmx:DataServices>\
+<Schema Namespace="vm_odata" xmlns="http://docs.oasis-open.org/odata/ns/edm">\
+<EntityType Name="module_type"/>\
+</Schema>\
 <Schema Namespace="testnamespace" xmlns="http://docs.oasis-open.org/odata/ns/edm">\
 <EntityType Name="Test1"/>\
 </Schema>\
 </edmx:DataServices>\
 </edmx:Edmx>'
+
+
 							);
 						}
 					};
