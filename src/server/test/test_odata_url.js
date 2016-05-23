@@ -1,13 +1,14 @@
 var assert = require('assert'),
 	postgresql = require('../phisical/database/postgresql.js');
 
-var odata = require('../index.js');
+var odata = require('..');
 describe('OData tests', function () {
 	this.timeout(15000);
 	
 	it('when create simple entity model', function (done_test) {
-		odata.manager.provider.recreate_database(function () {
-			odata.manager.module({
+		var odata_manager = odata.api.manager; 
+		odata_manager.provider.recreate_database(function () {
+			odata_manager.module({
 				name: 'testmodule',
 				namespace: 'testnamespace',
 				migrations: [{
@@ -35,7 +36,7 @@ describe('OData tests', function () {
 					}
 				}]
 			});
-			odata.manager.migrate(
+			odata_manager.migrate(
 				function (err) {
 					if(err) return done_test(err);
 					
@@ -56,10 +57,9 @@ describe('OData tests', function () {
 </edmx:DataServices>\
 </edmx:Edmx>'
 							);
-							done_test();
 						}
 					};
-					odata.process_request(req, res);
+					odata.api.process_request(req, res, done_test);
 				}
 			);
 		});

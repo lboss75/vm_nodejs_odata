@@ -29,18 +29,23 @@ ODataManager.prototype.module = function (module) {
 ODataManager.prototype.migrate = function (done_callback) {
     var pThis = this;
     
-    this.modules(function (err, modules, done, client) {
-        if(err){
-            debug('Unable to read modules ' + err);
-            return done_callback(err);
-        }
+    this.provider.connect(function (err, client, done) {
+        if(err) return done_callback(err);
+
+    pThis.get_modules(client, [ pThis.MODULE.NAME ], 
+        function (err, modules) {
+            if(err){
+                debug('Unable to read modules ' + err);
+                done(err);
+                return done_callback(err);
+            }
         
-        migrate_modules(pThis.modules2migrate, modules, function (err) {
-            done(err);
-            done_callback(err);
-        }, client);
+            migrate_modules(pThis.modules2migrate, modules, function (err) {
+                done_callback(err, client);
+                done(err);
+            }, client);
+        });
     });
-    
     function migrate_modules(modules2migrate, modules, done, client) {
         var tasks = [];
         modules2migrate.forEach(function (module2migrate){
@@ -105,12 +110,13 @@ ODataManager.prototype.migrate = function (done_callback) {
         }, function(err){
             if(err) return done(err);
             
+            var m = exp.source(pThis.MODULE.SCHEMA, pThis.MODULE.TABLE);
             client.update(
-                ODATA_MODULE_NAME, 'module', 'm',
+                m,
                 {
                     'last_migration': last_migration
                 },
-                exp.field('m.id').eq(exp.param('moduleId', moduleId)),
+                m.field('id').eq(exp.param('moduleId', moduleId)),
                 done
             );
         });
@@ -126,43 +132,55 @@ ODataManager.prototype.migrate = function (done_callback) {
 ODataManager.prototype.MODULE = {
 	SCHEMA: 'vm_odata',
 	TABLE: 'module',
-	ALIAS: 'm',
 	ID: 'id',
 	NAME: 'name',
-	NAMESPACE: 'namespace'
+	NAMESPACE: 'namespace',
+    LAST_MIGRATION: 'last_migration'
 };
 
 ODataManager.prototype.ENTITY_TYPE = {
 	SCHEMA: 'vm_odata',
 	TABLE: 'entity_type',
-	ALIAS: 't',
 	ID: 'id',
 	MODULE_ID: 'module_id',
 	NAME: 'name',
 	BASE_TYPE: 'base_type'
 };
 
-ODataManager.prototype.modules = function (callback) {
-    this.provider.connect(function (err, client, done) {
-        if(err) return callback(err);
-        
-        client.query(
-            exp.from(ODATA_MODULE_NAME, 'module', 'm').select(['m.name', 'm.namespace','m.last_migration']),
-            function (err, result) {
-                callback(err, result, done, client);
-            });            
-    });
+ODataManager.prototype.ENTITY_TYPE_PROPERTY = {
+	SCHEMA: 'vm_odata',
+	TABLE: 'entity_type_property',
+	ID: 'id',
+	ENTITY_TYPE_ID: 'entity_type_id',
+	NAME: 'name',
+	TYPE: 'type',
+	NULLABLE: 'nullable'
 };
 
-ODataManager.prototype.get_entity_set = function (client, entitySetId, callback) {
-    require('../types/entity_set.js').load_entity_set(client, entitySetId, callback);
+ODataManager.prototype.ENTITY_CONTAINER = {
+	SCHEMA: 'vm_odata',
+	TABLE: 'entity_container',
+	ID: 'id',
+	MODULE_ID: 'module_id',
+	NAME: 'name',
+	BASE_CONTAINER_ID: 'base_container_id'
+};
+
+ODataManager.prototype.ENTITY_SET = {
+	SCHEMA: 'vm_odata',
+	TABLE: 'entity_set',
+	ID: 'id',
+	CONTAINER_ID: 'container_id',
+	NAME: 'name',
+	ENTITY_TYPE_ID: 'entity_type_id'
 };
 
 ODataManager.prototype.get_modules = function (client, fields, callback) {
+    var m = exp.source(this.MODULE.SCHEMA, this.MODULE.TABLE);
     client.query(
-        exp
-            .from(this.MODULE.SCHEMA, this.MODULE.TABLE, this.MODULE.ALIAS)
-            .select(fields),
+        m.select(fields.map(function (field) {
+            return m.field(field);
+        })),
         function (err, result) {
             if(err) return callback(err);
             
@@ -170,12 +188,90 @@ ODataManager.prototype.get_modules = function (client, fields, callback) {
         });
 };
 
-ODataManager.prototype.get_module_entity_types = function (client, moduleId, fields, callback) {
+ODataManager.prototype.get_entity_set = function (client, entitySetId, fields, callback) {
+    var s = exp.source(this.ENTITY_SET.SCHEMA, this.ENTITY_SET.TABLE);
     client.query(
-        exp
-            .from(this.ENTITY_TYPE.SCHEMA, this.ENTITY_TYPE.TABLE, this.ENTITY_TYPE.ALIAS)
-            .where(exp.field(this.ENTITY_TYPE.ALIAS + '.' + this.ENTITY_TYPE.MODULE_ID).eq(exp.param('module_id', moduleId)))
-            .select(fields),
+        s
+        .where(s.field(this.ENTITY_SET.ID).eq(exp.param('entitySetId', entitySetId)))
+        .select(fields.map(function (field) {
+            return s.field(field);
+        })),
+        function (err, result) {
+            if(err) return callback(err);
+            
+            callback(err, result[0]);
+        });
+};
+
+ODataManager.prototype.get_container = function (client, containerId, fields, callback) {
+    var c = exp.source(this.ENTITY_CONTAINER.SCHEMA, this.ENTITY_CONTAINER.TABLE);
+    client.query(
+        c
+        .where(c.field(this.ENTITY_CONTAINER.ID).eq(exp.param('containerId', containerId)))
+        .select(fields.map(function (field) {
+            return c.field(field);
+        })),
+        function (err, result) {
+            if(err) return callback(err);
+            
+            callback(err, result[0]);
+        });
+};
+
+ODataManager.prototype.get_module = function (client, moduleId, fields, callback) {
+    var m = exp.source(this.MODULE.SCHEMA, this.MODULE.TABLE);
+    client.query(
+        m
+        .where(m.field(this.MODULE.ID).eq(exp.param('moduleId', moduleId)))
+        .select(fields.map(function (field) {
+            return m.field(field);
+        })),
+        function (err, result) {
+            if(err) return callback(err);
+            
+            callback(err, result[0]);
+        });
+};
+
+ODataManager.prototype.get_entity_type = function (client, entityTypeId, fields, callback) {
+    var t = exp.source(this.ENTITY_TYPE.SCHEMA, this.ENTITY_TYPE.TABLE);
+    client.query(
+        t
+        .where(t.field(this.ENTITY_TYPE.ID).eq(exp.param('entityTypeId', entityTypeId)))
+        .select(fields.map(function (field) {
+            return t.field(field);
+        })),
+        function (err, result) {
+            if(err) return callback(err);
+            
+            callback(err, result[0]);
+        });
+};
+
+ODataManager.prototype.get_entity_type_properties = function (client, entityTypeId, fields, callback) {
+    var p = exp.source(this.ENTITY_TYPE_PROPERTY.SCHEMA, this.ENTITY_TYPE_PROPERTY.TABLE);
+    client.query(
+        p
+        .where(p.field(this.ENTITY_TYPE_PROPERTY.ENTITY_TYPE_ID).eq(exp.param('entityTypeId', entityTypeId)))
+        .select(fields.map(function (field) {
+            return p.field(field);
+        })),
+        function (err, result) {
+            if(err) return callback(err);
+            
+            callback(err, result);
+        });
+};
+
+
+ODataManager.prototype.get_module_entity_types = function (client, moduleId, fields, callback) {
+    var t = exp.source(this.ENTITY_TYPE.SCHEMA, this.ENTITY_TYPE.TABLE);
+    client.query(
+        t
+        .where(t.field(this.ENTITY_TYPE.MODULE_ID).eq(exp.param('moduleId', moduleId)))
+        .select(fields.map(function (field) {
+            return t.field(field);
+        })),
         function (err, result) {
             if(err) return callback(err);
             

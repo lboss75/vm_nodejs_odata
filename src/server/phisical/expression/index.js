@@ -4,16 +4,12 @@
 var util = require('util');
 
 module.exports = {
-	from: function(schema, entityset, alias) {
-		return new ExpressionFrom(schema, entityset, alias);
-	},
-
-	field: function(field, source_alias){
-		return new ExpressionField(field, source_alias);
-	},
-	
 	param: function(name, value) {
 		return new ExpressionParam(name, value);
+	},
+	
+	source : function (schema, entityset) {
+		return new ExpressionFrom(schema, entityset);
 	}
 };
 
@@ -30,10 +26,13 @@ function BinaryExpression(left, operation, right) {
 	this.right = right;
 }
 
-function ExpressionFrom(schema, entityset, alias) {
+function ExpressionFrom(schema, entityset) {
 	this.schema = schema;
 	this.entityset = entityset;
-	this.alias = alias;	
+}
+
+ExpressionFrom.prototype.field = function(name){
+	return new ExpressionField(this, name);
 }
 
 ExpressionFrom.prototype.where = function(filter){
@@ -58,7 +57,8 @@ function ExpressionSelect(source, columns) {
 	this.columns = columns;
 }
 
-function ExpressionField(field) {
+function ExpressionField(source, field) {
+	this.source = source;
 	this.field = field;
 }
 util.inherits(ExpressionField, Expression);

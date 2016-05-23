@@ -1,14 +1,15 @@
-module.exports = new ODataAPI();
+module.exports = {
+    api: new ODataAPI()
+};
 
 var parser = require('./http/parser');
 var async = require('async');
 
 function ODataAPI() {
     this.manager = require('./phisical/manager').create_manager();
-    
 }
 
-ODataAPI.prototype.process_request = function(req, res){
+ODataAPI.prototype.process_request = function(req, res, done){
     var pThis = this;
     if(req.method == 'GET'){
         var segments = parser.parse(req.params[0], req.query);
@@ -34,13 +35,15 @@ ODataAPI.prototype.process_request = function(req, res){
         async.waterfall(
             callbacks,
             function (err, result) {
-                if(err) return err;
+                if(err) return done(err);
                 
                 result.execute(pThis.manager, function (err, body) {
-                    if(err) return err;
+                    if(err) return done(err);
                     
                     res.set('Content-Type', 'text/xml');
                     res.send(body);
+                    
+                    done();
                 });
             }
         );

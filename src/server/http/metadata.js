@@ -23,8 +23,8 @@ ODataMetadata.prototype.execute = function (odata_manager, callback) {
             odata_manager.get_modules(
                 client,
                 [
-                    odata_manager.MODULE.ALIAS + '.' + odata_manager.MODULE.ID,
-                    odata_manager.MODULE.ALIAS + '.' + odata_manager.MODULE.NAMESPACE
+                    odata_manager.MODULE.ID,
+                    odata_manager.MODULE.NAMESPACE
                 ],
                 function (err, modules) {
                         if(err) {  done(err); return callback(err); }
@@ -34,8 +34,8 @@ ODataMetadata.prototype.execute = function (odata_manager, callback) {
                             client,
                             module.id,
                             [
-                                odata_manager.ENTITY_TYPE.ALIAS + '.' + odata_manager.ENTITY_TYPE.ID,
-                                odata_manager.ENTITY_TYPE.ALIAS + '.' + odata_manager.ENTITY_TYPE.NAME
+                                odata_manager.ENTITY_TYPE.ID,
+                                odata_manager.ENTITY_TYPE.NAME
                             ],
                             function (err, entity_types) {
                                 if(err) {  done(err); return callback(err); }

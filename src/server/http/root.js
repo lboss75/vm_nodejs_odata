@@ -13,7 +13,7 @@ function ODataRoot() {
 
 ODataRoot.prototype.metadata = function () {
     var result = {
-        modules: exp.from('vm_odata', 'module', 'm')
+        modules: exp.source('vm_odata', 'module')
     };
     
     return result;

@@ -38,14 +38,16 @@ describe('Entity tests', function () {
 				}
 			);
 			odata_manager.migrate(
-				function (err) {
+				function (err, client) {
 					if(err) return done_test(err);
 					
-					odata_manager.modules(function (err, modules, done) {
+					odata_manager.get_modules(client, [
+						odata_manager.MODULE.NAME,
+						odata_manager.MODULE.NAMESPACE						
+					], function (err, modules) {
 						assert.equal (modules.length, 1);
 						assert.equal (modules[0].name, 'testmodule');
 						assert.equal (modules[0].namespace, 'testnamespace');
-						done();
 						done_test();
 					});
 				}

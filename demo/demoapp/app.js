@@ -14,7 +14,7 @@ app.use("/www/*", function(req,res){
 });
 
 app.use("/demo", function(req,res){
-  res.sendFile(__dirname + '/views/' + "demo.html");
+  res.sendFile(__dirname + '/views/demo.html');
 });
 
 app.use("/odata/*", function(req,res){
@@ -22,7 +22,7 @@ app.use("/odata/*", function(req,res){
 });
 
 app.use("/", function(req,res){
-  res.sendFile(__dirname + '/views/' + "index.html");
+  res.sendFile(__dirname + '/views/index.html');
 });
 
 app.listen(3000,function(){

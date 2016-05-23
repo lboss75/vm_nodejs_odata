@@ -29,6 +29,7 @@ PostgreSqlProvider.prototype.recreate_database = function (done_callback) {
                  throw 'error fetching client from pool ' + err;
             }
             result.rows.forEach(function (item) {
+                debug('drop schema ' + item.nspname + ' cascade');
                 client.query('drop schema ' + item.nspname + ' cascade', function (err, result) {
                     if(err) {
                         console.error('error at delete shema ' + item, err);
@@ -194,27 +195,10 @@ PostgreSqlClient.prototype.insert = function (schema, table, rows, callback) {
     this.real_client.query(sql, params, callback);
 }
 
-PostgreSqlClient.prototype.update = function (schema, table, alias, row, filter, callback) {
-    
-    var params = [];
-    var sql = 'UPDATE ' + schema + '.' + table + ' ' + alias + ' SET ';
-    
-    var fields = [];
-    for (var prop in row){
-        params.push({ name: prop, value: row[prop]});
-        fields.push(prop + '=$' + params.length);
-    }
-    sql += fields.join();
-    
-    var context = { builder: builder, params: params };
-    sql += ' WHERE ' + builder.where2sql(context, filter);
-    
-    debug('query: ' + sql + 
-        ((params.length == 0) ? '' : (',' + params.map(function (item, index) {
-            return '$' + (index + 1) + '=' + item.value;
-        }).join())));
-    
-    this.real_client.query(sql, params.map(function (item) {
+PostgreSqlClient.prototype.update = function (source, row, filter, callback) {
+    var context = { params: [] };
+    var sql = builder.update_sql(source, context, row, filter);
+    this.real_client.query(sql, context.params.map(function (item) {
         return item.value;
     }), callback);
 }
@@ -231,27 +215,57 @@ PostgreSqlClient.prototype.get_identity = function (callback) {
 };
 
 PostgreSqlClient.prototype.create_schema = function (schema, callback) {
+    debug('CREATE SCHEMA ' + schema);
     this.real_client.query('CREATE SCHEMA ' + schema, callback);
 };
 
 PostgreSqlClient.prototype.create_entity_set = function (odata_manager, entitySetId, callback) {
     var pThis = this;
     
-    odata_manager.get_entity_set(pThis, entitySetId, function (err, entitySet) {
-        entitySet.get_container(pThis, function (err, entity_container) {
-            entity_container.get_module(pThis, function (err, module) {
-                entitySet.get_entity_type(pThis, function (err, entity_type) {
-                    entity_type.get_properties(pThis, function (err, properties) {
-                        var sql = 'CREATE TABLE ' + module.name + '.' + entitySet.name + '('
-                        + properties.map(function (property) { return property2sql(property); }).join()
-                        + ')';
+    odata_manager.get_entity_set(pThis, entitySetId, 
+        [
+            odata_manager.ENTITY_SET.ID,
+            odata_manager.ENTITY_SET.NAME,
+            odata_manager.ENTITY_SET.CONTAINER_ID,
+            odata_manager.ENTITY_SET.ENTITY_TYPE_ID
+        ],
+        function (err, entitySet) {
+            odata_manager.get_container(pThis, entitySet.container_id,
+            [
+                odata_manager.ENTITY_CONTAINER.ID,
+                odata_manager.ENTITY_CONTAINER.NAME,
+                odata_manager.ENTITY_CONTAINER.MODULE_ID
+            ],
+            function (err, entity_container) {
+                odata_manager.get_module(pThis, entity_container.module_id,
+                [
+                    odata_manager.MODULE.ID,
+                    odata_manager.MODULE.NAME
+                ],
+                function (err, module) {
+                    odata_manager.get_entity_type(pThis, entitySet.entity_type_id,
+                    [
+                        odata_manager.ENTITY_TYPE.ID,
+                        odata_manager.ENTITY_TYPE.NAME,
+                    ],
+                    function (err, entity_type) {
+                        odata_manager.get_entity_type_properties(pThis, entitySet.entity_type_id,
+                        [
+                            odata_manager.ENTITY_TYPE_PROPERTY.ID,
+                            odata_manager.ENTITY_TYPE_PROPERTY.NAME,
+                            odata_manager.ENTITY_TYPE_PROPERTY.TYPE
+                        ],
+                        function (err, properties) {
+                            var sql = 'CREATE TABLE ' + module.name + '.' + entitySet.name + '('
+                            + properties.map(function (property) { return property2sql(property); }).join()
+                            + ')';
                         
-                        pThis.real_client.query(sql, callback);
+                            pThis.real_client.query(sql, callback);
+                        });
                     });
                 });
             });
         });
-    });
 };
 
 var builder = new PostgreSqlExpressionBuilder();
@@ -285,17 +299,26 @@ function PostgreSqlExpressionBuilder(){
 }
 
 PostgreSqlExpressionBuilder.prototype.sql = function (context, expression){
-    context.builder = this;
     return exp2sql.expression2sql(
+        this,
         context,
         expression);
 }
 
 PostgreSqlExpressionBuilder.prototype.where2sql = function (context, expression){
-    context.builder = this;
     return exp2sql.where2sql(
+        this,
         context,
         expression);
+}
+
+PostgreSqlExpressionBuilder.prototype.update_sql = function (source, context, row, filter){
+    return exp2sql.update2sql(
+        this,
+        source,
+        context,
+        row,
+        filter);
 }
 
 function expression_builder(){
