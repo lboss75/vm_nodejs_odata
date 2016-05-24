@@ -43,6 +43,10 @@ ExpressionFrom.prototype.select = function(columns){
 	return new ExpressionSelect(this, columns);
 }
 
+ExpressionFrom.prototype.join = function(source, filter){
+	return new ExpressionJoin(this, source, filter);
+}
+
 function ExpressionWhere(source, filter) {
 	this.source = source;
 	this.filter = filter;
@@ -66,4 +70,14 @@ util.inherits(ExpressionField, Expression);
 function ExpressionParam(name, value) {
 	this.name = name;
 	this.value = value;
+}
+
+function ExpressionJoin(left, right, filter) {
+	this.left = left;
+	this.right = right;
+	this.filter = filter;
+}
+
+ExpressionJoin.prototype.where = function(filter){
+	return new ExpressionWhere(this, filter);
 }

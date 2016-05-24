@@ -41,7 +41,7 @@ function parseName(state) {
         do{
             state.position++;
         } while(state.position < state.url.length
-         && (state.url[state.position] == '_' || isAlphaNumeric(state.url, state.position)));
+         && (state.url[state.position] == '_' || state.url[state.position] == '.' || isAlphaNumeric(state.url, state.position)));
         
         return state.url.substring(start, state.position);
     }

@@ -19,7 +19,7 @@ ODataAPI.prototype.process_request = function(req, res, done){
                         if(segment.name == '$metadata'){
                             return callback(null, require('./http/metadata.js').create_metadata(result));
                         } else {
-                            return callback(null, require('./http/module.js').create_member(segment, result));
+                            return callback(null, require('./http/member.js').create_member(result, segment));
                         }
                     }
                     
@@ -37,16 +37,34 @@ ODataAPI.prototype.process_request = function(req, res, done){
             function (err, result) {
                 if(err) return done(err);
                 
-                result.execute(pThis.manager, function (err, body) {
+                result.execute(pThis.manager, function (err, body, client, done_callback) {
                     if(err) return done(err);
                     
-                    res.set('Content-Type', 'text/xml');
-                    res.send(body);
+                    body.format(pThis.manager, req.query, client, function(err, data) {
+                        done_callback(err);
+                        
+                        if(err) return done(err);
+                        
+                        formatResult(req, res, data);
+                        done();
+                    }); 
                     
-                    done();
+                    //done();
                 });
             }
         );
     }
 };
 
+function formatResult(req, res, data) {
+    if(req.accept.split(',').some(function(type) {return type == 'application/json';})) {
+        res.set('Content-Type', 'application/json');
+        res.send(data.json(req));
+    } else if(req.accept.split(',').some(function(type) {return type == 'application/xml' || type == 'application/atom+xml'; })) {
+        res.set('Content-Type', 'text/xml');
+        res.send(data.xml(req));
+    } else {
+        res.set('Content-Type', 'text');
+        res.send('Invalid data format');
+    }
+}

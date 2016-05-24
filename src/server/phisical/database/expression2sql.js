@@ -59,6 +59,12 @@ function SourceToSql(builder, context, source) {
     return source.schema + '.' + source.entityset + ' ' + alias;
   }
   
+  if(source.constructor.name == 'ExpressionJoin') {
+    return SourceToSql(builder, context, source.left)
+      + ' INNER JOIN ' + SourceToSql(builder, context, source.right)
+      + ' ON ' + WhereToSql(builder, context, source.filter);
+  }
+  
   throw 'Invalid expression type';  
 }
 

@@ -1,5 +1,6 @@
 var assert = require('assert'),
-	postgresql = require('../phisical/database/postgresql.js');
+	postgresql = require('../phisical/database/postgresql.js'),
+	async = require('async');
 
 var odata = require('..');
 describe('OData tests', function () {
@@ -40,14 +41,16 @@ describe('OData tests', function () {
 				function (err) {
 					if(err) return done_test(err);
 					
-					var req = { method: 'GET', params: [ '$metadata' ], query: '' };
-					var res = {
-						set: function (header, value) {
-							assert.equal (header, 'Content-Type');
-							assert.equal (value, 'text/xml');
-						},
-						send: function (body) {
-							assert.equal (body, 
+					async.series([
+						function (done_step) {
+							var req = { method: 'GET', params: [ '$metadata' ], query: '', accept: 'application/atom+xml,application/xml' };
+							var res = {
+								set: function (header, value) {
+									assert.equal (header, 'Content-Type');
+									assert.equal (value, 'text/xml');
+								},
+								send: function (body) {
+									assert.equal (body, 
 '<?xml version="1.0"?>\n\
 <edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">\
 <edmx:DataServices>\
@@ -61,10 +64,39 @@ describe('OData tests', function () {
 </edmx:Edmx>'
 
 
-							);
-						}
-					};
-					odata.api.process_request(req, res, done_test);
+									);
+								}
+							};
+							odata.api.process_request(req, res, done_step);
+						},
+						function (done_step) {
+							var req = {
+								method: 'GET',
+								params: [ 'vm_odata.module' ],
+								query: {
+									'$top': 2,
+									'$orderby': 'name',
+									'$filter': 'startswith(name, \'vm_\') eq true'
+								},
+								accept: 'application/json'
+							};
+							var res = {
+								set: function (header, value) {
+									assert.equal (header, 'Content-Type');
+									assert.equal (value, 'application/json');
+								},
+								send: function (body) {
+									assert.equal (body, 
+'{"@odata.context":"",\
+"value":[\
+{"namespace":"vm_odata","name":"vm_odata","id":1},\
+{"namespace":"testnamespace","name":"testmodule","id":2}\
+]}'
+									);
+								}
+							};
+							odata.api.process_request(req, res, done_step);
+						}], done_test);
 				}
 			);
 		});

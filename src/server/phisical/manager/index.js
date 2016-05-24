@@ -213,6 +213,41 @@ ODataManager.prototype.ENTITY_SET = {
 	ENTITY_TYPE_ID: 'entity_type_id'
 };
 
+ODataManager.prototype.get_entity_set_source = function(client, entitySetId, done) {
+    var odata_manager = this;
+    var m = exp.source(odata_manager.MODULE.SCHEMA, odata_manager.MODULE.TABLE);
+    var e = exp.source(odata_manager.ENTITY_SET.SCHEMA, odata_manager.ENTITY_SET.TABLE);
+    var c = exp.source(odata_manager.ENTITY_CONTAINER.SCHEMA, odata_manager.ENTITY_CONTAINER.TABLE);
+    client.query(
+        e
+        .join(c.join(m, m.field(odata_manager.MODULE.ID).eq(c.field(odata_manager.ENTITY_CONTAINER.MODULE_ID))),
+            c.field(odata_manager.ENTITY_CONTAINER.ID).eq(e.field(odata_manager.ENTITY_SET.CONTAINER_ID)))            
+        .where(
+            e.field(odata_manager.ENTITY_SET.ID).eq(exp.param('entitySetId', entitySetId))
+        )
+        .select([
+            e.field(odata_manager.ENTITY_SET.NAME),
+            m.field(odata_manager.MODULE.NAMESPACE)
+        ]),
+    function (err, result) {
+        if(err) return done(err);
+        
+        done(err, exp.source(
+            client.escape_entity_set_schema(result[0].namespace),
+            client.escape_entity_set_table(result[0].name)));
+    });
+};
+
+ODataManager.prototype.get_entity_set_properties = function(client, source, property, done) {
+    switch(property.type){
+        case 'Edm.String':
+        case 'Edm.Int32':
+            return done(null, source.field(client.escape_entity_set_field_name(property.name)));
+        default:
+            return done(new Error('Invalid property type ' + property.type));
+    }
+};
+
 ODataManager.prototype.get_modules = function (client, fields, callback) {
     var m = exp.source(this.MODULE.SCHEMA, this.MODULE.TABLE);
     client.query(

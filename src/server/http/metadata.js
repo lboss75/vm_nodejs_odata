@@ -14,11 +14,12 @@ function ODataMetadata(source){
 }
 
 ODataMetadata.prototype.execute = function (odata_manager, callback) {
-    var owner = this.source.metadata();
-    
+    this.source.metadata(odata_manager, callback);
+};
+    /*
     if(owner.modules){
         odata_manager.provider.connect(function (err, client, done) {
-            if(err) {  done(err); return callback(err); }
+            if(err) return callback(err);
             
             odata_manager.get_modules(
                 client,
@@ -86,3 +87,41 @@ ODataMetadata.prototype.execute = function (odata_manager, callback) {
         callback();
     }        
 };
+
+function ODataMetadataData() {
+    
+}
+
+ODataMetadataData.prototype.format = function (manager, params, client, done) {
+    
+    var xw = new xmlWriter();
+    xw.startDocument();
+    xw.startElement('edmx:Edmx')
+        .writeAttribute('Version', '4.0')
+        .writeAttribute('xmlns:edmx', 'http://docs.oasis-open.org/odata/ns/edmx');
+    xw.startElement('edmx:DataServices');
+
+    modules.forEach(function(module){
+        xw.startElement('Schema')
+            .writeAttribute('Namespace', module.namespace)
+            .writeAttribute('xmlns', 'http://docs.oasis-open.org/odata/ns/edm');
+            
+        if(module.entity_types){
+            module.entity_types.forEach(function (entity_type) {
+                xw.startElement('EntityType')
+                    .writeAttribute('Name', entity_type.name);
+                    
+                xw.endElement();
+            })
+        }
+        
+        xw.endElement();
+    })
+
+    xw.endElement();
+    xw.endElement();   
+    xw.endDocument();
+
+    done(null, xw.toString());
+}
+*/

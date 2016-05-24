@@ -270,6 +270,18 @@ PostgreSqlClient.prototype.create_entity_set = function (odata_manager, entitySe
         });
 };
 
+PostgreSqlClient.prototype.escape_entity_set_schema = function (namespace) {
+    return  namespace;
+};
+
+PostgreSqlClient.prototype.escape_entity_set_table = function (name) {
+    return  name;
+};
+
+PostgreSqlClient.prototype.escape_entity_set_field_name = function (name) {
+    return  name;
+};
+
 var builder = new PostgreSqlExpressionBuilder();
 PostgreSqlProvider.prototype.sql = function (expression) {
     var context = { builder: builder };
