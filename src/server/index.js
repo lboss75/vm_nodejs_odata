@@ -57,10 +57,10 @@ ODataAPI.prototype.process_request = function(req, res, done){
 };
 
 function formatResult(req, res, data) {
-    if(req.accept.split(',').some(function(type) {return type == 'application/json';})) {
+    if(req.headers.accept.split(',').some(function(type) {return type == 'application/json';})) {
         res.set('Content-Type', 'application/json');
         res.send(data.json(req));
-    } else if(req.accept.split(',').some(function(type) {return type == 'application/xml' || type == 'application/atom+xml'; })) {
+    } else if(req.headers.accept.split(',').some(function(type) {return type == 'application/xml' || type == 'application/atom+xml'; })) {
         res.set('Content-Type', 'text/xml');
         res.send(data.xml(req));
     } else {

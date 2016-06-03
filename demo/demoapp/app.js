@@ -6,7 +6,17 @@ var app = express();
 var odata = require('../../src/server');
 
 app.use("/assets/:module/*", function(req,res){
-  res.sendFile(__dirname + '/bower_components/' + req.params.module + '/dist/' + req.params[0]);
+  var file1 = __dirname + '/bower_components/' + req.params.module + '/dist/' + req.params[0];
+  fs.exists(file1, function(exists) {
+    if(exists) {
+      res.sendFile(file1);
+    } else {
+      var file2 = __dirname + '/bower_components/' + req.params.module + '/' + req.params[0];
+      fs.exists(file2, function(exists) {
+        if(exists) { res.sendFile(file2); }
+      });
+     }
+  });
 });
 
 app.use("/www/*", function(req,res){
@@ -18,7 +28,11 @@ app.use("/demo", function(req,res){
 });
 
 app.use("/odata/*", function(req,res){
-  odata.process_request(req,res);
+  odata.api.process_request(req,res, function (err){
+    if(err) {
+      res.write('{ "error": { "message": "' + err + '" } }');
+    }
+  });
 });
 
 app.use("/", function(req,res){

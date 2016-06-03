@@ -44,13 +44,38 @@
       <div class="starter-template">
         <h1>Сайт на реконструкции</h1>
         <p class="lead">Пожалуйста зайдите позже</p>
+        <div id="formBody" />
       </div>
 
     </div><!-- /.container -->
     
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="assets/jquery/jquery.min.js"></script>
+    <script src="assets/jquery/jquery.min.js" type="text/javascript"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="assets/olingo-odatajs/odatajs.min.js" type="text/javascript"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="assets/form_builder/js/form_render.js" type="text/javascript"></script>
+    <script src="assets/form_builder/js/bootstrap_render.js" type="text/javascript"></script>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+          var context = new bootstrap_render(odatajs.oData);
+          var entity_type = {};
+          var view_data = {
+            controls: [{
+              'kind': 'grid',
+              'columns': [{
+                'header': 'Name',
+                'field': 'name'                  
+              },{
+                'header': 'Namespace',
+                'field': 'namespace'                  
+              }]              
+            }]
+          };
+          
+          render_form(context, entity_type, view_data, $('#formBody')); 
+        }); 
+    </script>
   </body>
 </html>

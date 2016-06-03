@@ -15,6 +15,8 @@
     "tests"
   ],
   "dependencies": {
-    "bootstrap": "latest"
+    "bootstrap": "latest",
+    "olingo-odatajs": "^4.0.0",
+    "history.js": "^1.8.0"
   }
 }
